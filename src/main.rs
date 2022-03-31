@@ -81,10 +81,10 @@ fn calc_conflicts(game_matches:&Vec<GameMatch>, data:Vec<ScoutSpot>) -> (i32, Sc
     let mut scout_assistant: ScoutAssistant = ScoutAssistant::new();
 
     for i in scout_spots {
-        for l in &i.teams_to_watch {
-            for j in game_matches {
-                let mut k: i32 = -1;
+        for j in game_matches {
+            let mut k:i32 = -1;
 
+            for l in &i.teams_to_watch {
                 if *l == j.blue.0 {
                     k += 1;
                     if k != 0 {
@@ -150,10 +150,10 @@ fn calc_conflicts(game_matches:&Vec<GameMatch>, data:Vec<ScoutSpot>) -> (i32, Sc
                         }
                     }
                 }
+            }
 
-                if k != -1 {
-                    conflicts += k;
-                }
+            if k != -1 {
+                conflicts += k;
             }
         }
     }
