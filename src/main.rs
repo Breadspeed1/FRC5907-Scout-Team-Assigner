@@ -1,4 +1,6 @@
 use std::borrow::{Borrow, BorrowMut};
+use std::collections;
+use std::collections::btree_map::Entry;
 use std::io::Write;
 use std::ops::{Add, Rem};
 use itertools::Itertools;
@@ -27,7 +29,7 @@ fn main() {
 
         current_data = pass(&game_matches, teams.clone(), amount_of_scouts);
 
-        let current_pass:(Vec<ScoutSpot>, Vec<(GameMatch, i32)>) = (current_data.0.0, current_data.0.1.get_tuples());
+        let current_pass:(Vec<ScoutSpot>, Vec<(GameMatch, &Vec<i32>)>) = (current_data.0.0, current_data.0.1.get_tuples());
         let current_conflict = current_data.1;
 
         if current_conflict < current_best {
@@ -79,42 +81,79 @@ fn calc_conflicts(game_matches:&Vec<GameMatch>, data:Vec<ScoutSpot>) -> (i32, Sc
     let mut scout_assistant: ScoutAssistant = ScoutAssistant::new();
 
     for i in scout_spots {
-        for j in game_matches {
-            let mut k:i32 = -1;
-            for l in &i.teams_to_watch {
+        for l in &i.teams_to_watch {
+            for j in game_matches {
+                let mut k: i32 = -1;
+
                 if *l == j.blue.0 {
                     k += 1;
-                    scout_assistant.teams_to_watch.insert(GameMatch{red:j.red, blue:j.blue}, *l);
+                    if k != 0 {
+                        let game_match: GameMatch = GameMatch{red:j.red, blue:j.blue};
+                        match scout_assistant.teams_to_watch.entry(game_match) {
+                            std::collections::hash_map::Entry::Vacant(e) => { e.insert(vec![*l]); }
+                            std::collections::hash_map::Entry::Occupied(mut e) => { e.get_mut().push(*l); }
+                        }
+                    }
                 }
 
                 if *l == j.blue.1 {
                     k += 1;
-                    scout_assistant.teams_to_watch.insert(GameMatch{red:j.red, blue:j.blue}, *l);
+                    if k != 0 {
+                        let game_match: GameMatch = GameMatch{red:j.red, blue:j.blue};
+                        match scout_assistant.teams_to_watch.entry(game_match) {
+                            std::collections::hash_map::Entry::Vacant(e) => { e.insert(vec![*l]); }
+                            std::collections::hash_map::Entry::Occupied(mut e) => { e.get_mut().push(*l); }
+                        }
+                    }
                 }
 
                 if *l == j.blue.2 {
                     k += 1;
-                    scout_assistant.teams_to_watch.insert(GameMatch{red:j.red, blue:j.blue}, *l);
+                    if k != 0 {
+                        let game_match: GameMatch = GameMatch{red:j.red, blue:j.blue};
+                        match scout_assistant.teams_to_watch.entry(game_match) {
+                            std::collections::hash_map::Entry::Vacant(e) => { e.insert(vec![*l]); }
+                            std::collections::hash_map::Entry::Occupied(mut e) => { e.get_mut().push(*l); }
+                        }
+                    }
                 }
 
                 if *l == j.red.0 {
                     k += 1;
-                    scout_assistant.teams_to_watch.insert(GameMatch{red:j.red, blue:j.blue}, *l);
+                    if k != 0 {
+                        let game_match: GameMatch = GameMatch{red:j.red, blue:j.blue};
+                        match scout_assistant.teams_to_watch.entry(game_match) {
+                            std::collections::hash_map::Entry::Vacant(e) => { e.insert(vec![*l]); }
+                            std::collections::hash_map::Entry::Occupied(mut e) => { e.get_mut().push(*l); }
+                        }
+                    }
                 }
 
                 if *l == j.red.1 {
                     k += 1;
-                    scout_assistant.teams_to_watch.insert(GameMatch{red:j.red, blue:j.blue}, *l);
+                    if k != 0 {
+                        let game_match: GameMatch = GameMatch{red:j.red, blue:j.blue};
+                        match scout_assistant.teams_to_watch.entry(game_match) {
+                            std::collections::hash_map::Entry::Vacant(e) => { e.insert(vec![*l]); }
+                            std::collections::hash_map::Entry::Occupied(mut e) => { e.get_mut().push(*l); }
+                        }
+                    }
                 }
 
                 if *l == j.red.2 {
                     k += 1;
-                    scout_assistant.teams_to_watch.insert(GameMatch{red:j.red, blue:j.blue}, *l);
+                    if k != 0 {
+                        let game_match: GameMatch = GameMatch{red:j.red, blue:j.blue};
+                        match scout_assistant.teams_to_watch.entry(game_match) {
+                            std::collections::hash_map::Entry::Vacant(e) => { e.insert(vec![*l]); }
+                            std::collections::hash_map::Entry::Occupied(mut e) => { e.get_mut().push(*l); }
+                        }
+                    }
                 }
-            }
 
-            if k != -1 {
-                conflicts += k;
+                if k != -1 {
+                    conflicts += k;
+                }
             }
         }
     }
@@ -162,7 +201,7 @@ impl ScoutSpot {
 
 #[derive(Serialize)]
 struct ScoutAssistant {
-    teams_to_watch: HashMap<GameMatch, i32>
+    teams_to_watch: HashMap<GameMatch, Vec<i32>>
 }
 
 impl std::hash::Hash for GameMatch {
@@ -189,11 +228,11 @@ impl ScoutAssistant {
         return ScoutAssistant {teams_to_watch:HashMap::new()};
     }
 
-    pub fn get_tuples(&self) -> Vec<(GameMatch, i32)> {
-        let mut re: Vec<(GameMatch, i32)> = Vec::new();
+    pub fn get_tuples(&self) -> Vec<(GameMatch, &Vec<i32>)> {
+        let mut re: Vec<(GameMatch, &Vec<i32>)> = Vec::new();
 
         for i in self.teams_to_watch.iter() {
-            re.push((GameMatch{blue: i.0.blue, red: i.0.red}, *i.1));
+            re.push((GameMatch{blue: i.0.blue, red: i.0.red}, i.1));
         }
 
         return re;
