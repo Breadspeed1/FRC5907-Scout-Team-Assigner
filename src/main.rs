@@ -1,12 +1,13 @@
 use std::borrow::{Borrow, BorrowMut};
 use std::io::Write;
-use std::ops::Add;
+use std::ops::{Add, Rem};
 use itertools::Itertools;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 use serde::Serialize;
 use serde_json::Value;
 use match_getter::get_matches;
+use std::collections;
 
 mod match_getter;
 
@@ -147,15 +148,11 @@ impl ScoutAssistant {
     //TODO: remove dups -> foreach element: make a copy and then check every other element for equality and remove it and at the end push the copy
 
     pub fn remove_duplicates(&mut self) -> ScoutAssistant {
-        let mut copy_of_teams: &Vec<(GameMatch, i32)> = &self.teams_to_watch;
-        let mut copy_of_copy_of_teams: &Vec<(GameMatch, i32)>;
+        let mut temp: Vec<(GameMatch, i32)> = Vec::new();
 
-        for thing in copy_of_teams {
-            for i in 0..self.teams_to_watch.len() {
-                if self.teams_to_watch[i].0.blue == thing.0.blue && self.teams_to_watch[i].0.red == thing.0.red && self.teams_to_watch[i].1 == thing.1 {
-                    //copy_of_teams.remove(i);
-                }
-            }
+        for i in self.teams_to_watch.iter().unique() {
+            //add to temp
+            temp.push((GameMatch{blue: i.0.blue, red: i.0.red}, i.1));
         }
 
         return ScoutAssistant::new();
