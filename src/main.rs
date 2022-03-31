@@ -145,11 +145,10 @@ impl ScoutAssistant {
         return ScoutAssistant {teams_to_watch:Vec::new()};
     }
 
-    //TODO: remove dups -> foreach element: make a copy and then check every other element for equality and remove it and at the end push the copy
-
     pub fn remove_duplicates(&mut self) -> ScoutAssistant {
         let mut temp: Vec<(GameMatch, i32)> = Vec::new();
 
+        //TODO: implement Eq and Hash for GameMatch
         for i in self.teams_to_watch.iter().unique() {
             //add to temp
             temp.push((GameMatch{blue: i.0.blue, red: i.0.red}, i.1));
