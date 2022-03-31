@@ -7,8 +7,9 @@ use rand::thread_rng;
 use serde::Serialize;
 use serde_json::Value;
 use match_getter::get_matches;
-use std::collections;
 use std::collections::HashMap;
+use std::fs::File;
+use std::hash::Hasher;
 
 mod match_getter;
 
@@ -26,16 +27,16 @@ fn main() {
 
         current_data = pass(&game_matches, teams.clone(), amount_of_scouts);
 
-        let current_pass:(Vec<ScoutSpot>, ScoutAssistant) = current_data.0;
+        let current_pass:(Vec<ScoutSpot>, Vec<(GameMatch, i32)>) = (current_data.0.0, current_data.0.1.get_tuples());
         let current_conflict = current_data.1;
 
         if current_conflict < current_best {
             current_best = current_conflict;
             println!("new current best!! {}, it took {} second(s)", current_best, uptime_lib::get().expect("time died").as_secs() - start_time);
 
-            let json = serde_json::to_string(&current_pass);
-            let mut file = std::fs::File::create(String::from("Results\\").add(current_best.to_string().as_str()).add(".json")).expect("good file no creaty prob cause of weird path");
-            file.write_all(json.unwrap().as_bytes()).expect("everything is on fire");
+            let json: String = serde_json::to_string(&current_pass).expect("failed to parse");
+            let mut file: File = std::fs::File::create(String::from("Results\\").add(current_best.to_string().as_str()).add(".json")).expect("good file no creaty prob cause of weird path");
+            file.write_all(json.as_bytes()).expect("everything is on fire");
 
             if current_conflict < 1 {
                 running = false;
@@ -81,12 +82,35 @@ fn calc_conflicts(game_matches:&Vec<GameMatch>, data:Vec<ScoutSpot>) -> (i32, Sc
         for j in game_matches {
             let mut k:i32 = -1;
             for l in &i.teams_to_watch {
-                if *l == j.blue.0 { k += 1; scout_assistant.teams_to_watch.push((GameMatch{red:j.red, blue:j.blue}, *l)); }
-                if *l == j.blue.1 { k += 1; scout_assistant.teams_to_watch.push((GameMatch{red:j.red, blue:j.blue}, *l)); }
-                if *l == j.blue.2 { k += 1; scout_assistant.teams_to_watch.push((GameMatch{red:j.red, blue:j.blue}, *l)); }
-                if *l == j.red.0 { k += 1; scout_assistant.teams_to_watch.push((GameMatch{red:j.red, blue:j.blue}, *l)); }
-                if *l == j.red.1 { k += 1; scout_assistant.teams_to_watch.push((GameMatch{red:j.red, blue:j.blue}, *l)); }
-                if *l == j.red.2 { k += 1; scout_assistant.teams_to_watch.push((GameMatch{red:j.red, blue:j.blue}, *l)); }
+                if *l == j.blue.0 {
+                    k += 1;
+                    scout_assistant.teams_to_watch.insert(GameMatch{red:j.red, blue:j.blue}, *l);
+                }
+
+                if *l == j.blue.1 {
+                    k += 1;
+                    scout_assistant.teams_to_watch.insert(GameMatch{red:j.red, blue:j.blue}, *l);
+                }
+
+                if *l == j.blue.2 {
+                    k += 1;
+                    scout_assistant.teams_to_watch.insert(GameMatch{red:j.red, blue:j.blue}, *l);
+                }
+
+                if *l == j.red.0 {
+                    k += 1;
+                    scout_assistant.teams_to_watch.insert(GameMatch{red:j.red, blue:j.blue}, *l);
+                }
+
+                if *l == j.red.1 {
+                    k += 1;
+                    scout_assistant.teams_to_watch.insert(GameMatch{red:j.red, blue:j.blue}, *l);
+                }
+
+                if *l == j.red.2 {
+                    k += 1;
+                    scout_assistant.teams_to_watch.insert(GameMatch{red:j.red, blue:j.blue}, *l);
+                }
             }
 
             if k != -1 {
@@ -141,35 +165,39 @@ struct ScoutAssistant {
     teams_to_watch: HashMap<GameMatch, i32>
 }
 
-impl PartialEq<Self> for ScoutAssistant {
-    fn eq(&self, other: &Self) -> bool {
-        let mut j: bool = true;
-        for i in self.teams_to_watch.iter() {
-            //if other.teams_to_watch != i.1 {
-                j = false;
-            //}
-        }
-
-        return j;
+impl std::hash::Hash for GameMatch {
+    fn hash<H: Hasher>(&self, state: &mut H) where H: std::hash::Hasher {
+        state.write_i32(self.red.0);
+        state.write_i32(self.red.1);
+        state.write_i32(self.red.2);
+        state.write_i32(self.blue.0);
+        state.write_i32(self.blue.1);
+        state.write_i32(self.blue.2);
     }
 }
+
+impl PartialEq<Self> for GameMatch {
+    fn eq(&self, other: &Self) -> bool {
+        self.red == other.red && self.blue == other.blue
+    }
+}
+
+impl Eq for GameMatch {}
 
 impl ScoutAssistant {
     pub fn new() -> ScoutAssistant {
         return ScoutAssistant {teams_to_watch:HashMap::new()};
     }
 
-    /*pub fn remove_duplicates(&mut self) -> ScoutAssistant {
-        let mut temp: Vec<(GameMatch, i32)> = Vec::new();
+    pub fn get_tuples(&self) -> Vec<(GameMatch, i32)> {
+        let mut re: Vec<(GameMatch, i32)> = Vec::new();
 
-        //TODO: implement Eq and Hash for GameMatch
-        for i in self.teams_to_watch.iter().unique() {
-            //add to temp
-            temp.push((GameMatch{blue: i.0.blue, red: i.0.red}, i.1));
+        for i in self.teams_to_watch.iter() {
+            re.push((GameMatch{blue: i.0.blue, red: i.0.red}, *i.1));
         }
 
-        return ScoutAssistant::new();
-    }*/
+        return re;
+    }
 }
 
 #[derive(Serialize)]
