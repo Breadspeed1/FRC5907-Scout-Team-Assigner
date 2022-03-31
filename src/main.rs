@@ -1,9 +1,6 @@
-use std::borrow::{Borrow, BorrowMut};
-use std::collections;
-use std::collections::btree_map::Entry;
+use std::borrow::{Borrow};
 use std::io::Write;
-use std::ops::{Add, Rem};
-use itertools::Itertools;
+use std::ops::{Add};
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 use serde::Serialize;
@@ -12,14 +9,16 @@ use match_getter::get_matches;
 use std::collections::HashMap;
 use std::fs::File;
 use std::hash::Hasher;
+use uptime_lib::get;
 
 mod match_getter;
 
 fn main() {
-    let data:(Vec<GameMatch>, Vec<i32>) = get_data();
+    let input_data = get_input();
+    let amount_of_scouts: u32 = input_data.0 as u32;
+    let data:(Vec<GameMatch>, Vec<i32>) = get_data(input_data.1);
     let game_matches:Vec<GameMatch> = data.0;
     let teams:Vec<i32> = data.1;
-    let amount_of_scouts:u32 = 15;
     let mut current_best:i32 = i32::MAX;
     let mut running:bool = true;
     let start_time:u64 = uptime_lib::get().expect("time literally go bye bye").as_secs();
@@ -47,6 +46,37 @@ fn main() {
     }
 
     println!("we did it boys");
+}
+
+fn get_input() -> (i32, String) {
+    for i in get_event_codes() {
+        println!("{} -- {}", i.0, i.1);
+    }
+
+    let mut line = String::new();
+    println!("Enter your event code (find from listed above) :");
+    std::io::stdin().read_line(&mut line).expect("aaaa");
+
+    let code: String = line;
+
+    let mut line2 = String::new();
+    println!("Enter the amount of scouts you have :");
+    std::io::stdin().read_line(&mut line2).expect("d");
+
+    let scouts: i32 = line2.trim().parse().expect("a");
+
+    return (scouts, String::from(code.trim()));
+}
+
+fn get_event_codes() -> Vec<(String, String)> {
+    let mut codes: Vec<(String, String)> = Vec::new();
+    let data: Value = serde_json::from_str(match_getter::get_events().as_str()).expect("yaaa");
+
+    for i in data.as_array().expect("ya") {
+        codes.push((String::from(i["name"].as_str().expect("deez")), String::from(i["event_code"].as_str().expect("deez"))));
+    }
+
+    return codes;
 }
 
 fn pass(game_matches:&Vec<GameMatch>, teams: Vec<i32>, amount_of_scouts:u32) -> ((Vec<ScoutSpot>, ScoutAssistant), i32) {
@@ -161,10 +191,10 @@ fn calc_conflicts(game_matches:&Vec<GameMatch>, data:Vec<ScoutSpot>) -> (i32, Sc
     return (conflicts, scout_assistant);
 }
 
-fn get_data() -> (Vec<GameMatch>, Vec<i32>) {
+fn get_data(code: String) -> (Vec<GameMatch>, Vec<i32>) {
     let mut data:Vec<GameMatch> = Vec::new();
     let mut teams:Vec<i32> = Vec::new();
-    let api_data:Value = serde_json::from_str(get_matches().as_str()).expect("didnt do the thing");
+    let api_data:Value = serde_json::from_str(get_matches(code).as_str()).expect("didnt do the thing");
 
     for i in api_data.as_array().unwrap() {
         data.push(GameMatch::from_team_json(i));
