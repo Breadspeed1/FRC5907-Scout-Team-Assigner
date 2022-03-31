@@ -8,6 +8,7 @@ use serde::Serialize;
 use serde_json::Value;
 use match_getter::get_matches;
 use std::collections;
+use std::collections::HashMap;
 
 mod match_getter;
 
@@ -137,15 +138,28 @@ impl ScoutSpot {
 
 #[derive(Serialize)]
 struct ScoutAssistant {
-    teams_to_watch: Vec<(GameMatch, i32)>
+    teams_to_watch: HashMap<GameMatch, i32>
+}
+
+impl PartialEq<Self> for ScoutAssistant {
+    fn eq(&self, other: &Self) -> bool {
+        let mut j: bool = true;
+        for i in self.teams_to_watch.iter() {
+            //if other.teams_to_watch != i.1 {
+                j = false;
+            //}
+        }
+
+        return j;
+    }
 }
 
 impl ScoutAssistant {
     pub fn new() -> ScoutAssistant {
-        return ScoutAssistant {teams_to_watch:Vec::new()};
+        return ScoutAssistant {teams_to_watch:HashMap::new()};
     }
 
-    pub fn remove_duplicates(&mut self) -> ScoutAssistant {
+    /*pub fn remove_duplicates(&mut self) -> ScoutAssistant {
         let mut temp: Vec<(GameMatch, i32)> = Vec::new();
 
         //TODO: implement Eq and Hash for GameMatch
@@ -155,7 +169,7 @@ impl ScoutAssistant {
         }
 
         return ScoutAssistant::new();
-    }
+    }*/
 }
 
 #[derive(Serialize)]
